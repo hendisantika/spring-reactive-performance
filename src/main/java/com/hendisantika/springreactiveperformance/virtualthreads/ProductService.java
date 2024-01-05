@@ -1,5 +1,7 @@
 package com.hendisantika.springreactiveperformance.virtualthreads;
 
+import com.hendisantika.springreactiveperformance.model.Price;
+import com.hendisantika.springreactiveperformance.model.Product;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -22,5 +24,15 @@ public class ProductService {
 
     public void addProductToCart(String productId, String cartId) {
         Thread.startVirtualThread(() -> computePriceAndPublishMessage(productId, cartId));
+    }
+
+    private void computePriceAndPublishMessage(String productId, String cartId) {
+        Product product = repository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("not found!"));
+
+        Price price = computePrice(productId, product);
+
+        var event = new ProductAddedToCartEvent(productId, price.value(), price.currency(), cartId);
+        kafkaTemplate.send(PRODUCT_ADDED_TO_CART_TOPIC, cartId, event);
     }
 }
