@@ -1,6 +1,8 @@
 package com.hendisantika.springreactiveperformance.webflux;
 
 import com.hendisantika.springreactiveperformance.config.KafkaTemplate;
+import com.hendisantika.springreactiveperformance.model.Price;
+import com.hendisantika.springreactiveperformance.model.Product;
 import com.hendisantika.springreactiveperformance.model.ProductAddedToCartEvent;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -29,5 +31,13 @@ public class ProductService {
                 .flatMap(this::computePrice)
                 .map(price -> new ProductAddedToCartEvent(productId, price.value(), price.currency(), cartId))
                 .subscribe(event -> kafkaTemplate.send(PRODUCT_ADDED_TO_CART_TOPIC, cartId, event));
+    }
+
+    private Mono<Price> computePrice(Product product) {
+        if (product.category().isEligibleForDiscount()) {
+            return discountService.discountForProduct(product.id())
+                    .map(product.basePrice()::applyDiscount);
+        }
+        return Mono.just(product.basePrice());
     }
 }
