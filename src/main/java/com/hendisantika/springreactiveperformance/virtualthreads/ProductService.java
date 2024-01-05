@@ -4,6 +4,8 @@ import com.hendisantika.springreactiveperformance.model.Price;
 import com.hendisantika.springreactiveperformance.model.Product;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 /**
  * Created by IntelliJ IDEA.
  * Project : spring-reactive-performance
@@ -34,5 +36,13 @@ public class ProductService {
 
         var event = new ProductAddedToCartEvent(productId, price.value(), price.currency(), cartId);
         kafkaTemplate.send(PRODUCT_ADDED_TO_CART_TOPIC, cartId, event);
+    }
+
+    private Price computePrice(String productId, Product product) {
+        if (product.category().isEligibleForDiscount()) {
+            BigDecimal discount = discountService.discountForProduct(productId);
+            return product.basePrice().applyDiscount(discount);
+        }
+        return product.basePrice();
     }
 }
