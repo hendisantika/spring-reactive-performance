@@ -1,7 +1,9 @@
 package com.hendisantika.springreactiveperformance.virtualthreads;
 
+import com.hendisantika.springreactiveperformance.config.KafkaTemplate;
 import com.hendisantika.springreactiveperformance.model.Price;
 import com.hendisantika.springreactiveperformance.model.Product;
+import com.hendisantika.springreactiveperformance.model.ProductAddedToCartEvent;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
