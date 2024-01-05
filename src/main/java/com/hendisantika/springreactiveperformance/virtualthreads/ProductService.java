@@ -20,4 +20,7 @@ public class ProductService {
     private final DiscountService discountService;
     private final KafkaTemplate<String, ProductAddedToCartEvent> kafkaTemplate;
 
+    public void addProductToCart(String productId, String cartId) {
+        Thread.startVirtualThread(() -> computePriceAndPublishMessage(productId, cartId));
+    }
 }
