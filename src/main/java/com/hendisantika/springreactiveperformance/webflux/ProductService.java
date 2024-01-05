@@ -3,6 +3,7 @@ package com.hendisantika.springreactiveperformance.webflux;
 import com.hendisantika.springreactiveperformance.config.KafkaTemplate;
 import com.hendisantika.springreactiveperformance.model.ProductAddedToCartEvent;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,4 +22,12 @@ public class ProductService {
     private final ProductRepository repository;
     private final DiscountService discountService;
     private final KafkaTemplate<String, ProductAddedToCartEvent> kafkaTemplate;
+
+    public void addProductToCart(String productId, String cartId) {
+        repository.findById(productId)
+                .switchIfEmpty(Mono.error(() -> new IllegalArgumentException("not found!")))
+                .flatMap(this::computePrice)
+                .map(price -> new ProductAddedToCartEvent(productId, price.value(), price.currency(), cartId))
+                .subscribe(event -> kafkaTemplate.send(PRODUCT_ADDED_TO_CART_TOPIC, cartId, event));
+    }
 }
